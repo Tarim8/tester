@@ -1,15 +1,15 @@
 NAME
 ====
 
-  sherver ---- a bash script web server with CGI handler
+    sherver ---- a bash script web server with CGI handler
 
 
 SYNOPSIS
 ========
 
-  sherver [PORT] [ROOT_DIR] [OPTIONS...]
-  sherver [status|stop] [MATCHING_ARGS]
-  sherver [--help|--version]
+    sherver [PORT] [ROOT_DIR] [OPTIONS...]
+    sherver [status|stop] [MATCHING_ARGS]
+    sherver [--help|--version]
 
 
 DESCRIPTION
