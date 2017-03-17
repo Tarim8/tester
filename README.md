@@ -15,11 +15,18 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-  sherver is a web server for files and cgi commands.  It will serve files which are not hidden under the root directory or run scripts in the cgi-bin directory.  It will serve index.html, if it exists, when asked for a directory.  It can be easily modified to use local commands defined within the script.  It logs on standard output.
+  sherver is a web server for files and cgi commands.  It will serve files
+which are not hidden under the root directory or run scripts in a cgi-bin
+directory.  It will serve index.html, if it exists, when asked for a directory.
+It can be easily modified to use local commands defined within the script.  It
+logs on standard output.
 
-  CGI scripts should output any extra headers on stdout, followed by a blank line, followed by the main body of output.  Most of the usual CGI variables are set.
+  CGI scripts should output any extra headers on stdout, followed by a blank
+line, followed by the main body of output.  Most of the usual CGI variables are
+set.
 
-  sherver is not built to be particularly secure and intended mainly for use on localhost on private networks.
+  sherver is not built to be particularly secure and intended mainly for use on
+localhost on private networks.
 
 
 OPTIONS
@@ -29,31 +36,47 @@ OPTIONS
   Listen on this port number.  Default is 8080.
 
     ROOT_DIR
-  Serve files from this directory.  Default is /nonexistent so if not specified then sherver will only handle local commands.
+  Serve files from this directory.  Default is /nonexistent so if not specified
+then sherver will only handle local commands.
 
     --config CONFIG_FILE
-  Read the config file.  CGI environment variables may be set, or option variables (with the - replaced with _)
+  Read the config file.  CGI environment variables may be set, or option
+variables (with the - replaced with _)
 
     --virtual-host DEFAULT_NAME
-  Run in virtual host mode.  Files are served from ROOT_DIR/VIRTUAL_HOST/ instead of ROOT_DIR/.  VIRTUAL_HOST consists of the host name given by the browser, or DEFAULT_NAME if no Host: field is present.
+  Run in virtual host mode.  Files are served from ROOT_DIR/VIRTUAL_HOST/
+instead of ROOT_DIR/.  VIRTUAL_HOST consists of the host name given by the
+browser, or DEFAULT_NAME if no Host: field is present.
 
     --cgi-bin CGI_PATTERN
-  Run CGI scripts with execute permission which match this pattern.  Setting this to "" will allow CGI scripts throughout the directory tree.  Default is "cgi-bin/*".
+  Run CGI scripts with execute permission which end with this pattern.  Setting
+this to "" will allow CGI scripts throughout the directory tree.  Default is
+"cgi-bin/*".
 
     --index-page INDEX_FILE
-  Serve this page when asked for a directory.  Setting this to "dirindex" will turn on directory listings.
+  Serve this page when asked for a directory.  Setting this to "dirindex" will
+turn on directory listings.
 
     --error-pages ERROR_PREFIX
-  Serve files in the form NNN.html prefixed by ERROR_PREFIX when reporting a status code of NNN.
+  Serve files in the form NNN.html prefixed by ERROR_PREFIX when reporting a
+status code of NNN.
+
+    --time-out SECONDS
+  Time in seconds that client must respond before being given a 408 response.
 
     --keep-alive
-  Don't send a Connection: close field to allow the connection to be kept open.  Helps with files with many images in but some browsers may default to keeping the connection open which won't allow any other accesses to the (single threaded) sherver.
+  Don't send a Connection: close field to allow the connection to be kept open.
+Helps with files with many images in but some browsers may default to keeping
+the connection open which won't allow any other accesses to the (single
+threaded) sherver.
 
     --remote
   Set REMOTE_ADDR and REMOTE_PORT for CGI scripts
 
     --server | --content-type | --date | --date-modified
-  Send the corresponding HTTP response field back to the client.  Content-Type is taken by looking up the file tag in /etc/mime.types.  Date-Modified is taken from the date modified time of the file.
+  Send the corresponding HTTP response field back to the client.  Content-Type
+is taken by looking up the file tag in /etc/mime.types.  Date-Modified is taken
+from the date modified time of the file.
 
     --version
   Print the version and exit.
@@ -62,7 +85,9 @@ OPTIONS
   Print the usage and exit.
 
     stop
-  Stop running shervers.  Any arguments given will do a partial match of the arguments used on running shervers.  It may be useful to specify the PORT first to allow easy matching.
+  Stop running shervers.  Any arguments given will do a partial match of the
+arguments used on running shervers.  It may be useful to specify the PORT first
+to allow easy matching.
 
     status
   Give the status of running shervers.  Arguments work as for the stop command.
@@ -78,8 +103,10 @@ CONFIG
     dot_replace="/nonexistent"
     error_pages=""              # --error-pages ERROR_PREFIX
     index_page="index.html"     # --index-page INDEX_NAME
+    mime_types="/etc/mime.types"
     root_dir="/nonexistent"     # ROOT_DIR
     temp_dir="/tmp"
+    time_out=23                 # --time-out SECONDS
 
     # boolean (non-blank is true)
     content_type=""             # --content-type
@@ -91,8 +118,8 @@ CONFIG
     debug=""                    # --debug
 
     # commands
-    netcat="nc -lnvk " | "nc -lnvp "
-    netstat="netstat -A inet --tcp -n"
+    netcat="nc -lnvk "
+    netstat="netstat --tcp -n"
 
     # HTTP status messages
     default_protocol="HTTP/1.1"
@@ -136,9 +163,13 @@ CONFIG
 EXAMPLE
 =======
 
-  sherver 8081 /srv/root --virtual-host default.com --cgi-bin "*" --index-page dirindex --remote
+  sherver 8081 /srv/root --virtual-host default.com --cgi-bin "" --index-page dirindex --remote
 
-  Will run a web server on port 8081 with root of /srv/root/example.com for a request of http://example.com:8080/  Any executable files within the tree will be run as a CGI.  Asking for a directory will serve a file listing.  REMOTE_PORT and REMOTE_ADDR will be set for CGI scripts.  Only Content-Length: and Connection: close will be returned as HTTP fields.
+  Runs a web server on port 8081 with root of /srv/root/example.com for a
+request of http://example.com:8080/  Any executable files within the tree will
+be run as a CGI.  Asking for a directory will serve a file listing.
+REMOTE_PORT and REMOTE_ADDR will be set for CGI scripts.  Only Content-Length:
+and Connection: close will be returned as HTTP fields.
 
 
 NOTES
@@ -146,19 +177,36 @@ NOTES
 
   Bash is a daft way to write a web server.
 
-  Sherver can only serve one connection at a time.  If running with non-OpenBSD netcat then it can't keep the socket open for multiple connects so may miss some connections - particularly if serving a file with many images/css/js in.  Specifying keep-alive may help - but may also block the port by browsers which decide it's a good idea to keep it open.  Reducing max-concurrent-connections to 1 in a browser may (or may not) help.  If you're trying to serve anything but simple files or CGI scripts - use a proper server.
+  Sherver can only serve one connection at a time.  If running with
+non-OpenBSD netcat then it can't keep the socket open for multiple connects so
+may miss some connections - particularly if serving a file with many
+images/css/js in.  Specifying keep-alive may help - but may also block the
+port by browsers which decide it's a good idea to keep it open.  Reducing
+max-concurrent-connections to 1 in a browser may (or may not) help.  If you're
+trying to serve anything but simple files or CGI scripts - use a proper
+server.
 
-  dot_replace is what will replace any "/." in a URI.  This prevents serving hidden files or paths which contain "../" in them.  You can set dot_replace to "/." but be warned this will also allow .. in a path.  Setting dot_replace to "/" is not recommended as ".../" will be replaced with "../".
+  Sherver does not notice disconnects - os it may be possible to get previous
+sessions data or timeout if they disconnect before receiving a response.
 
-  cgi_bin will check whether a command is executable so getting this wrong may allow serving the source of scripts or executing files.
+  dot_replace is what will replace any "/." in a URI.  This prevents serving
+hidden files or paths which contain "../" in them.  You can set dot_replace to
+"/." but be warned this will also allow .. in a path.  Setting dot_replace to
+"/" is not recommended as ".../" will be replaced with "../".
 
-  error_pages is a prefix so error_pages="error_dir/err" will allow a file such as error_dir/err404.html
+  cgi_bin will check whether a command is executable so getting this wrong may
+allow serving the source of scripts or executing files.
 
-  index_page may be an executable script.  Setting index_page="dirindex" invokes the internal command dirindex.
+  error_pages is a prefix so error_pages="error_dir/err" will allow a file
+such as error_dir/err404.html
 
-  netcat commands and options will be set according to whether OpenBsd netcat or GNU is present.  Setting netcat="socat TCP4-LISTEN:" may work if socat is installed.
+  index_page may be an executable script.  Setting index_page="dirindex"
+invokes the internal command dirindex.
 
-  netstat may be able to use "ss" with the same arguments.
+  If only GNU netcat is installed then use netcat="nc -lnvp ".  Setting
+netcat="socat TCP4-LISTEN:" may work if socat is installed.
+
+  netstat may be set to use "ss" with the same arguments.
 
 
 AUTHOR
@@ -170,3 +218,4 @@ AUTHOR
 SEE ALSO
 ========
   nodejs, python
+
